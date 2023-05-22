@@ -21,7 +21,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#292B2E"
-      }
+      },
+      "package": "com.anonymous.bluetoothconnection"
     },
     "web": {
       "favicon": "./assets/favicon.png"
