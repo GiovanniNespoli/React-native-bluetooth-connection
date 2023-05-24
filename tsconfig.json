@@ -10,7 +10,7 @@
       "@src/*": ["./src/*"],
       "@components/*": ["./src/components/*"],
       "@assets/*": ["./src/assets/*"],
-      "@hooks/*": ["./src/hooks/*"],
+      "@hooks/*": ["src/modules/BluetoothConnection/hooks/*"],
       "@modules/*": ["./src/modules/*"],
       "@routes/*": ["./src/routes/*"],
       "@services/*": ["./src/services/*"],

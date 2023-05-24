@@ -1,19 +1,27 @@
 {
   "expo": {
-    "name": "bluetooth-connection",
-    "slug": "bluetooth-connection",
+    "name": "my-app",
+    "slug": "my-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "@config-plugins/react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": ["peripheral", "central"],
+          "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
+        }
+      ]
+    ],
     "splash": {
       "image": "./src/assets/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#292B2E"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -22,7 +30,7 @@
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#292B2E"
       },
-      "package": "com.anonymous.bluetoothconnection"
+      "package": "com.anonymous.myapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"

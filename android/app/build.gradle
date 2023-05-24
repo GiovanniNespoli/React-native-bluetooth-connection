@@ -113,9 +113,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.bluetoothconnection'
+    namespace 'com.anonymous.myapp'
     defaultConfig {
-        applicationId 'com.anonymous.bluetoothconnection'
+        applicationId 'com.anonymous.myapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
