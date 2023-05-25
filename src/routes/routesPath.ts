@@ -4,7 +4,12 @@ import { StackScreenProps } from "@react-navigation/stack";
 export type StackParamList = {
   Welcome: undefined;
   BluetoothConnection: undefined;
-  BluetoothConnected: { value: string };
+  BluetoothConnected: {
+    deviceId: string;
+    serviceId: string;
+    characteristicId: string;
+    value: { nome: string; voltas: string; sentido: string };
+  };
 };
 
 export type StackProps<T extends keyof StackParamList> = StackScreenProps<

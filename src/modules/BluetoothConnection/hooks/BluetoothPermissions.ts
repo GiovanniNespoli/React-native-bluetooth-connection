@@ -15,7 +15,12 @@ interface IBluetoothLowEnergyApi {
   allDevices: Device[];
   connectToDevice: (deviceId: Device) => Promise<void>;
   connectedDevice: Device | null;
-  deviceInformations: any;
+  deviceInformations: {
+    deviceId: string;
+    serviceId: string;
+    characteristicId: string;
+    value: { nome: string; voltas: string; sentido: string };
+  };
 }
 
 function useBluetoothPermissions(): IBluetoothLowEnergyApi {
@@ -23,7 +28,13 @@ function useBluetoothPermissions(): IBluetoothLowEnergyApi {
 
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
-  const [deviceInformations, setDeviceInformations] = useState("");
+  const [deviceInformations, setDeviceInformations] = useState({
+    deviceId: "",
+    serviceId: "",
+    characteristicId: "",
+    value: { nome: "string", voltas: "string", sentido: "string" },
+  });
+  // const [deviceInformations, setDeviceInformations] = useState("");
 
   // Pedir permissões do android de level 31
   const requestAndroid31Permissions = async () => {
@@ -138,7 +149,11 @@ function useBluetoothPermissions(): IBluetoothLowEnergyApi {
               return console.log("Erro ao achar custom service");
             }
             startStreamingData(device, customService.uuid);
+          }).catch((error) => {
+            console.log(error);
           });
+        }).catch((error) => {
+          console.log(error);
         });
       bleManager.stopDeviceScan();
     } catch (error) {
@@ -146,23 +161,24 @@ function useBluetoothPermissions(): IBluetoothLowEnergyApi {
     }
   };
 
-  const onInformationsUpdate = (
-    error: BleError | null,
-    characteristic: Characteristic | null
-  ) => {
-    if (error) {
-      console.log(error);
-    } else if (!characteristic?.value) {
-      console.log("No data Recieved");
-      return;
-    }
-    const rawData = base64.decode(characteristic?.value);
-    // console.log("CARACTERISTICA", characteristic);
+  // const onInformationsUpdate = (
+  //   error: BleError | null,
+  //   characteristic: Characteristic | null
+  // ) => {
+  //   if (error) {
+  //     console.log(error);
+  //   } else if (!characteristic?.value) {
+  //     console.log("No data Recieved");
+  //     return;
+  //   }
+  //   const rawData = base64.decode(characteristic?.value);
+  //   // console.log("CARACTERISTICA", characteristic);
 
-    setDeviceInformations(rawData);
-  };
+  //   setDeviceInformations(rawData);
+  // };
 
   const startStreamingData = async (device: Device, service: string) => {
+    // lê todas as caracteristicas da service
     const characteristicList = await bleManager.characteristicsForDevice(
       device.id,
       service
@@ -178,11 +194,28 @@ function useBluetoothPermissions(): IBluetoothLowEnergyApi {
     }
 
     if (device) {
-      device.monitorCharacteristicForService(
-        service,
-        customCharacteristic.uuid,
-        onInformationsUpdate
-      );
+      // lê a caracteristica específica da service
+      bleManager
+        .readCharacteristicForDevice(
+          device.id,
+          service,
+          customCharacteristic.uuid
+        )
+        .then((characteristic) => {
+          const rawData = base64.decode(characteristic?.value);
+          const rawDataToJSON = JSON.parse(rawData);
+
+          setDeviceInformations({
+            deviceId: device.id,
+            serviceId: service,
+            characteristicId: characteristic.uuid,
+            value: {
+              nome: rawDataToJSON.nome,
+              sentido: rawDataToJSON.sentido,
+              voltas: rawDataToJSON.voltas,
+            },
+          });
+        });
     } else {
       return "Erro ao buscar o serviço";
     }
@@ -194,7 +227,16 @@ function useBluetoothPermissions(): IBluetoothLowEnergyApi {
     allDevices,
     connectToDevice,
     connectedDevice,
-    deviceInformations,
+    deviceInformations: {
+      deviceId: deviceInformations.deviceId,
+      characteristicId: deviceInformations.characteristicId,
+      serviceId: deviceInformations.serviceId,
+      value: {
+        nome: deviceInformations.value.nome,
+        voltas: deviceInformations.value.voltas,
+        sentido: deviceInformations.value.sentido,
+      },
+    },
   };
 }
 

@@ -16,7 +16,12 @@ export function BluetoothConnection() {
     allDevices,
     connectToDevice,
     connectedDevice,
-    deviceInformations,
+    deviceInformations: {
+      deviceId,
+      characteristicId,
+      serviceId,
+      value: { nome, sentido, voltas },
+    },
   } = useBluetoothPermissions();
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
@@ -34,11 +39,15 @@ export function BluetoothConnection() {
 
   useEffect(() => {
     if (connectedDevice) {
-      navigate("BluetoothConnected", { value: deviceInformations });
+      navigate("BluetoothConnected", {
+        serviceId,
+        characteristicId,
+        value: { nome, sentido, voltas, deviceId },
+      });
     } else {
       console.log("Erro ao conectar");
     }
-  }, [connectedDevice, deviceInformations]);
+  }, [connectedDevice, characteristicId, serviceId, nome, sentido, voltas]);
 
   const openModal = async () => {
     scanForDevices();

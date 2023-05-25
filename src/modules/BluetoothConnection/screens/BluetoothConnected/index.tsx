@@ -1,22 +1,51 @@
 import { Button } from "@components/Button";
 import React, { useCallback, useEffect, useState } from "react";
-import { BluetoothInformations, Container } from "./styles";
+import {
+  BluetoothContainer,
+  BluetoothInformations,
+  BluetoothInformationsContainer,
+  Container,
+  DeviceTitle,
+} from "./styles";
 import { BluetoothScreenProps, StackParamList } from "@routes/routesPath";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import useBluetoothPermissions from "../../hooks/BluetoothPermissions";
-import DeviceModal from "../../components/DeviceConnectionModal";
 
 export function BluetoothConnected({
   route,
 }: BluetoothScreenProps<"BluetoothConnected">) {
+  const { goBack } = useNavigation<StackNavigationProp<StackParamList>>();
   const {
-    params: { value },
+    params: {
+      characteristicId,
+      serviceId,
+      deviceId,
+      value: { nome, sentido, voltas },
+    },
   } = route;
 
   return (
     <Container>
-      <BluetoothInformations>{value}</BluetoothInformations>
+      <DeviceTitle>Device: {deviceId}</DeviceTitle>
+      <BluetoothInformationsContainer>
+        <BluetoothInformations size={13}>
+          Serviço: {serviceId}
+        </BluetoothInformations>
+        <BluetoothInformations size={11}>
+          Característica: {characteristicId}
+        </BluetoothInformations>
+      </BluetoothInformationsContainer>
+      <BluetoothContainer>
+        <BluetoothInformations>Nome: {nome}</BluetoothInformations>
+        <BluetoothInformations>Sentido: {sentido}</BluetoothInformations>
+        <BluetoothInformations>Voltas: {voltas}</BluetoothInformations>
+      </BluetoothContainer>
+      <Button
+        label="Go Back"
+        onPress={() => {
+          goBack();
+        }}
+      />
     </Container>
   );
 }
