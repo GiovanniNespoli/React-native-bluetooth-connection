@@ -11,28 +11,33 @@ import base64 from "react-native-base64";
 
 interface IBluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
-  scanForPeripherals(): void;
-  allDevices: Device[];
-  connectToDevice: (deviceId: Device) => Promise<void>;
-  connectedDevice: Device | null;
-  deviceInformations: {
-    deviceId: string;
-    serviceId: string;
-    characteristicId: string;
-    value: { nome: string; voltas: string; sentido: string };
-  };
+  scanForDevices(): void;
+  handleSetDeviceId(deviceId: string): void;
+  deviceList: Device[];
+  deviceId: string;
+  // scanForPeripherals(): void;
+  // allDevices: Device[];
+  // connectToDevice: (deviceId: Device) => Promise<void>;
+  // connectedDevice: Device | null;
+  // deviceInformations: {
+  //   deviceId: string;
+  //   serviceId: string;
+  //   characteristicId: string;
+  //   value: { nome: string; voltas: string; sentido: string };
+  // };
+  // sendDataTobluetooth: (device: string) => Promise<void>;
 }
-
 function useBluetoothPermissions(): IBluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
 
-  const [allDevices, setAllDevices] = useState<Device[]>([]);
+  const [deviceId, setDeviceId] = useState("");
+  const [deviceList, setDeviceList] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
   const [deviceInformations, setDeviceInformations] = useState({
-    deviceId: "",
+    // deviceId: "",
     serviceId: "",
     characteristicId: "",
-    value: { nome: "string", voltas: "string", sentido: "string" },
+    // value: { nome: "string", voltas: "string", sentido: "string" },
   });
   // const [deviceInformations, setDeviceInformations] = useState("");
 
@@ -104,139 +109,62 @@ function useBluetoothPermissions(): IBluetoothLowEnergyApi {
     }
   };
 
-  //verifcar se há perifericos iguais
   const isDuplicateDevice = (devices: Device[], nextDevice: Device) =>
     devices.findIndex((device) => nextDevice.id === device.id) > -1;
 
-  //verificar perifericos para conectar
-  const scanForPeripherals = () => {
-    // 1º parm -> array de UUID que são registradas em um periferico escaneado, se for null mostrará todos os perifericos
-    //2º parm -> opções para escanear
-    //3º parm -> função de error e e do periferico escaneado
-    bleManager.startDeviceScan(null, null, (error, device) => {
+  const scanForDevices = async () => {
+    bleManager.startDeviceScan(null, null, async (error, device) => {
       if (error) {
-        console.log(error);
+        bleManager.stopDeviceScan();
+        return console.log("Scan error");
       }
-
-      //verifica os device e o nome dele para listar
       if (device && device.name?.includes("")) {
-        setAllDevices((prevState: Device[]) => {
-          if (!isDuplicateDevice(prevState, device)) {
-            return [...prevState, device];
+        setDeviceList((previousDevice: Device[]) => {
+          if (!isDuplicateDevice(previousDevice, device)) {
+            return [...previousDevice, device];
           }
-          return prevState;
+          return previousDevice;
         });
       }
     });
   };
 
-  const connectToDevice = async (device: Device) => {
-    try {
-      const deviceConnection = await bleManager.connectToDevice(device.id);
-      setConnectedDevice(deviceConnection);
-      await deviceConnection
-        .discoverAllServicesAndCharacteristics()
-        .then((allservices) => {
-          let servicesArray = allservices.services();
-
-          servicesArray.then((services) => {
-            const customService = services.find(
-              (service) =>
-                service.uuid === "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-            );
-
-            if (!customService?.uuid) {
-              return console.log("Erro ao achar custom service");
-            }
-            startStreamingData(device, customService.uuid);
-          }).catch((error) => {
-            console.log(error);
-          });
-        }).catch((error) => {
-          console.log(error);
-        });
-      bleManager.stopDeviceScan();
-    } catch (error) {
-      console.log(error);
+  const handleSetDeviceId = async (deviceId: string) => {
+    if (deviceId) {
+      return setDeviceId(deviceId);
     }
   };
 
-  // const onInformationsUpdate = (
-  //   error: BleError | null,
-  //   characteristic: Characteristic | null
-  // ) => {
-  //   if (error) {
-  //     console.log(error);
-  //   } else if (!characteristic?.value) {
-  //     console.log("No data Recieved");
-  //     return;
-  //   }
-  //   const rawData = base64.decode(characteristic?.value);
-  //   // console.log("CARACTERISTICA", characteristic);
+  const connectToDevice = () => {
+    bleManager.connectToDevice(deviceId).then(async (device) => {
+      await device.discoverAllServicesAndCharacteristics();
+      device
+        .services()
+        .then(async (services) => {
+          const findService = services.find(
+            (serviceId) =>
+              serviceId.uuid === "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+          );
 
-  //   setDeviceInformations(rawData);
-  // };
+          if (!findService) {
+            throw "error";
+          }
 
-  const startStreamingData = async (device: Device, service: string) => {
-    // lê todas as caracteristicas da service
-    const characteristicList = await bleManager.characteristicsForDevice(
-      device.id,
-      service
-    );
 
-    let customCharacteristic = characteristicList.find(
-      (characteristict) =>
-        characteristict.uuid === "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-    );
-
-    if (!customCharacteristic?.uuid) {
-      return console.log("Erro ao achar custom characteristic");
-    }
-
-    if (device) {
-      // lê a caracteristica específica da service
-      bleManager
-        .readCharacteristicForDevice(
-          device.id,
-          service,
-          customCharacteristic.uuid
-        )
-        .then((characteristic) => {
-          const rawData = base64.decode(characteristic?.value);
-          const rawDataToJSON = JSON.parse(rawData);
-
-          setDeviceInformations({
-            deviceId: device.id,
-            serviceId: service,
-            characteristicId: characteristic.uuid,
-            value: {
-              nome: rawDataToJSON.nome,
-              sentido: rawDataToJSON.sentido,
-              voltas: rawDataToJSON.voltas,
-            },
-          });
+          const findCharac
+        })
+        .catch((error) => {
+          console.log(error);
         });
-    } else {
-      return "Erro ao buscar o serviço";
-    }
+    });
   };
 
   return {
     requestPermissions,
-    scanForPeripherals,
-    allDevices,
-    connectToDevice,
-    connectedDevice,
-    deviceInformations: {
-      deviceId: deviceInformations.deviceId,
-      characteristicId: deviceInformations.characteristicId,
-      serviceId: deviceInformations.serviceId,
-      value: {
-        nome: deviceInformations.value.nome,
-        voltas: deviceInformations.value.voltas,
-        sentido: deviceInformations.value.sentido,
-      },
-    },
+    scanForDevices,
+    deviceList,
+    handleSetDeviceId,
+    deviceId,
   };
 }
 

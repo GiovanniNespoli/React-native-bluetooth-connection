@@ -1,5 +1,5 @@
 import { Button } from "@components/Button";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Container, NavigateText } from "./styles";
 import { StackParamList } from "@routes/routesPath";
 import { useNavigation } from "@react-navigation/native";
@@ -9,24 +9,15 @@ import useBluetoothPermissions from "../BluetoothConnection/hooks/BluetoothPermi
 export function Welcome() {
   const { navigate } = useNavigation<StackNavigationProp<StackParamList>>();
 
-  const {
-    connectedDevice,
-    deviceInformations: {
-      characteristicId,
-      deviceId,
-      serviceId,
-      value: { nome, sentido, voltas },
-    },
-  } = useBluetoothPermissions();
+  const { requestPermissions } = useBluetoothPermissions();
 
-  useEffect(() => {
-    if (connectedDevice) {
-      navigate("BluetoothConnected", {
-        deviceId,
-        characteristicId,
-        serviceId,
-        value: { nome, sentido, voltas },
-      });
+  const getPermissions = useCallback(async () => {
+    const permissions = await requestPermissions();
+
+    if (permissions) {
+      navigate("BluetoothConnection")
+    } else {
+      console.log("Erro nas permissões");
     }
   }, []);
 
@@ -36,7 +27,7 @@ export function Welcome() {
       <Button
         label="Click here!!"
         onPress={() => {
-          navigate("BluetoothConnection");
+          getPermissions();
         }}
       />
     </Container>

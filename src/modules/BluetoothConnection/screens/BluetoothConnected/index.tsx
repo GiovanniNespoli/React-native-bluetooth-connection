@@ -10,19 +10,21 @@ import {
 import { BluetoothScreenProps, StackParamList } from "@routes/routesPath";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import useBluetoothPermissions from "../../hooks/BluetoothPermissions";
+import { Device } from "react-native-ble-plx";
 
 export function BluetoothConnected({
   route,
 }: BluetoothScreenProps<"BluetoothConnected">) {
   const { goBack } = useNavigation<StackNavigationProp<StackParamList>>();
   const {
-    params: {
+    deviceInformations: {
       characteristicId,
-      serviceId,
       deviceId,
+      serviceId,
       value: { nome, sentido, voltas },
     },
-  } = route;
+  } = useBluetoothPermissions();
 
   return (
     <Container>
