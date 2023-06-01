@@ -10,40 +10,41 @@ import {
 import { BluetoothScreenProps, StackParamList } from "@routes/routesPath";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useBluetooth } from "../../hooks/BluetoothPermissions";
 
 export function BluetoothConnected({
   route,
 }: BluetoothScreenProps<"BluetoothConnected">) {
   const { goBack } = useNavigation<StackNavigationProp<StackParamList>>();
-  const {
-    params: {
-      characteristicId,
-      serviceId,
-      deviceId,
-      value: { nome, sentido, voltas },
-    },
-  } = route;
+  const { deviceInformations, disconnectDevice, sendData } = useBluetooth();
 
   return (
     <Container>
-      <DeviceTitle>Device: {deviceId}</DeviceTitle>
+      <DeviceTitle>Device: {deviceInformations.deviceUUID}</DeviceTitle>
       <BluetoothInformationsContainer>
         <BluetoothInformations size={13}>
-          Serviço: {serviceId}
+          Serviço: {deviceInformations.serviceUUID}
         </BluetoothInformations>
         <BluetoothInformations size={11}>
-          Característica: {characteristicId}
+          Característica: {deviceInformations.characteristicUUID}
         </BluetoothInformations>
       </BluetoothInformationsContainer>
       <BluetoothContainer>
-        <BluetoothInformations>Nome: {nome}</BluetoothInformations>
-        <BluetoothInformations>Sentido: {sentido}</BluetoothInformations>
-        <BluetoothInformations>Voltas: {voltas}</BluetoothInformations>
+        <BluetoothInformations>
+          Voltas: {deviceInformations.value.voltas}
+        </BluetoothInformations>
       </BluetoothContainer>
       <Button
-        label="Go Back"
+        label="Disconnect"
         onPress={() => {
+          disconnectDevice(deviceInformations.deviceUUID);
           goBack();
+        }}
+      />
+      <Button
+        label="Send data"
+        onPress={() => {
+          sendData("Teste");
         }}
       />
     </Container>
